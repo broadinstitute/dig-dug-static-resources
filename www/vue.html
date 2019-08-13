@@ -27,9 +27,9 @@
     </body>
     <script>
 
-        parseGetData(jsonObject){
+        parseGetDataOutput(jsonObject){
 
-        }
+        };
         new Vue({
             el: "#app",
             data() {
@@ -69,7 +69,7 @@
                 })
                 .then(function(res){ return res.json(); })
                 .then(function(data){ alert( JSON.stringify( data ) ) })
-                .then(function(res){return parseGetData(res)});
+                .then(function(res){return parseGetDataOutput(res)});
 
                 fetch("/getPhenotypes")
                 .then(response => response.json())
@@ -85,17 +85,6 @@
                     this.datasetlist = json;
                     //console.log(json);
                 });
-
-                // fetch("/getData/:dataset/:phenotype",{
-                //     method: "POST",
-                //     body: data
-                // })
-                // .then(response => response.json())
-                // .then(json => {
-                //     this.info3 = json;
-                //     this.variantslist = json;
-                //     //console.log(json);
-                // });
             }
         });
     </script>
