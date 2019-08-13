@@ -75,12 +75,6 @@ class DropdownReact extends React.Component {
       }
       else{
 
-          // var Data     = this.state.datasets,
-          //   Datasets = function(dataset) {
-          //       return <option>{dataset}</option>;
-          //   };
-          //   return <select>{Data.map(Datasets)}</select>;
-
 console.log(this.state.phenotypes['GLYCEMIC']);
             var Phenotype     = this.state.phenotypes[],
               Phenotypes = function(phenotype) {

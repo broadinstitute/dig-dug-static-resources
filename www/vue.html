@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script src="https://unpkg.com/vue"></script>
+    <title>Vue Test</title>
+</head>
+<body>
+    <div id="app">
+        <p>{{ info }}</p>
+        <p>{{ info2 }}</p>
+
+        <select v-model="firstOption">
+            <optgroup v-for="(key, listvalue) in phenotypelist" v-bind:label="key">
+                <option v-for="(listvalue) in phenotypelist" :value="listvalue">{{ listvalue }}</option
+                    >
+                </optgroup>
+
+            </select>
+
+            <select v-model="secondOption">
+                <option v-for="item in datasetlist">{{ item }}</option>
+            </select>
+        </div>
+    </body>
+    <script>
+
+        parseGetData(jsonObject){
+
+        }
+        new Vue({
+            el: "#app",
+            data() {
+                return {
+                    info: null,
+                    info2: null,
+                    firstOption: null,
+                    secondOption: null,
+                    thirdOption: null,
+                    phenotypelist: null,
+                    datasetlist: null
+                };
+            },
+            mounted() {
+
+                var getDataPayload = {"passback": "abc123", "entity": "variant", "page_start":-1, "page_size": -1,
+                "limit": 500, "count": false, "result_format": "verbose",
+                "order_by": [
+                    {"dataset_id": "GWAS_DIAMANTE_eu_mdv37", "phenotype": "T2D", "operand": "P_VALUE", "operator": "1"}],
+                "properties": {
+                    "cproperty": [ "CHROM" , "CLOSEST_GENE" , "DBSNP_ID" , "POS" , "VAR_ID"],
+                    "dproperty" : {"MAF" : [ "GWAS_DIAMANTE_eu_mdv37"] } ,
+                    "pproperty" : {"ODDS_RATIO" : { "GWAS_DIAMANTE_eu_mdv37" : [ "T2D"]}, "P_VALUE" : { "GWAS_DIAMANTE_eu_mdv37" : [ "T2D"] } } },
+                "filters":  [
+                    {"dataset_id": "GWAS_DIAMANTE_eu_mdv37", "phenotype": "T2D",
+                    "operand": "P_VALUE", "operator": "LT", "value": 0.0005, "operand_type": "FLOAT"},
+                    {"dataset_id": "GWAS_DIAMANTE_eu_mdv37", "phenotype": "T2D",
+                    "operand": "P_VALUE", "operator": "GT", "value": 0.0, "operand_type": "FLOAT"} ] };
+
+                var data = new FormData();
+                data.append( "json", JSON.stringify( getDataPayload ) );
+
+                fetch("http://ec2-34-229-106-174.compute-1.amazonaws.com:8090/dccservices/getData",
+                {
+                    method: "POST",
+                    body: data
+                })
+                .then(function(res){ return res.json(); })
+                .then(function(data){ alert( JSON.stringify( data ) ) })
+                .then(function(res){return parseGetData(res)});
+
+                fetch("/getPhenotypes")
+                .then(response => response.json())
+                .then(json => {
+                    this.info = json;
+                    this.phenotypelist = json;
+                    //console.log(json);
+                });
+                fetch("/getDatasets")
+                .then(response => response.json())
+                .then(json => {
+                    this.info2 = json;
+                    this.datasetlist = json;
+                    //console.log(json);
+                });
+
+                // fetch("/getData/:dataset/:phenotype",{
+                //     method: "POST",
+                //     body: data
+                // })
+                // .then(response => response.json())
+                // .then(json => {
+                //     this.info3 = json;
+                //     this.variantslist = json;
+                //     //console.log(json);
+                // });
+            }
+        });
+    </script>
+    </html>
