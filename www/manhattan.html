@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <title>Vue Test</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,178 +15,257 @@
     <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 
     <!-- stylesheets -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
-</head>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css"
+    />
+  </head>
 
-<body>
+  <body>
     <div id="app">
+      <!-- Create a phenotype selection combo box component -->
+      Phenotype:
+      <phenotype-select inline-template>
+        <select
+          v-model="phenotype"
+          @change="$store.dispatch('selectPhenotype', phenotype)"
+        >
+          <optgroup
+            v-for="(item, index) in $store.state.phenotypeMap"
+            :label="index"
+          >
+            <option
+              v-for="listvalue in $store.state.phenotypeMap[index]"
+              :value="listvalue"
+              >{{ listvalue }}
+            </option>
+          </optgroup>
+        </select>
+      </phenotype-select>
 
-        <!-- Create a phenotype selection combo box component -->
-        Phenotype:
-        <phenotype-select inline-template>
-            <select v-model="phenotype" @change="$store.dispatch('selectPhenotype', phenotype)">
-                <optgroup v-for="(item, index) in $store.state.phenotypeMap" :label="index">
-                    <option v-for="listvalue in $store.state.phenotypeMap[index]" :value="listvalue">{{ listvalue }}
-                    </option>
-                </optgroup>
-            </select>
-        </phenotype-select>
+      <!-- Create a dataset selection combo box component -->
+      Dataset:
+      <dataset-select inline-template>
+        <select
+          v-model="dataset"
+          @change="$store.dispatch('selectDataset', dataset)"
+        >
+          <option v-for="item in $store.state.datasetList" :value="item">{{
+            item
+          }}</option>
+        </select>
+      </dataset-select>
 
-        <!-- Create a dataset selection combo box component -->
-        Dataset:
-        <dataset-select inline-template>
-            <select v-model="dataset" @change="$store.dispatch('selectDataset', dataset)">
-                <option v-for="item in $store.state.datasetList" :value="item">{{ item }}</option>
-            </select>
-        </dataset-select>
+      <!-- getData filters -->
+      <div v-if="$store.state.dataset">
+        P-value:
+        <input
+          v-model="$store.state.pValueThreshold"
+          @change="$store.dispatch('performGetData')"
+        />
+      </div>
 
-        <!-- getData filters -->
-        <div v-if="$store.state.dataset">
-            P-value: <input v-model="$store.state.pValueThreshold" @change="$store.dispatch('performGetData')">
-        </div>
-
-        <!-- the final list of variants -->
-        <table class="table table-striped" style="margin-top:20px">
-            <thead class="thead-dark">
-                <th>rsid</th>
-                <th>p-value</th>
-            </thead>
-            <tbody>
-                <tr v-for="(row, index) in $store.state.variants">
-                    <td>{{ row[4].VAR_ID }}</td>
-                    <td>{{ row[7].P_VALUE[$store.state.selectedDataset][$store.state.selectedPhenotype] }}</td>
-                </tr>
-            </tbody>
-        </table>
+      <!-- the final list of variants -->
+      <table class="table table-striped" style="margin-top:20px">
+        <thead class="thead-dark">
+          <th>rsid</th>
+          <th>closest gene</th>
+          <th>p-value</th>
+        </thead>
+        <tbody>
+          <tr v-for="(row, index) in $store.state.tableData">
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>
+              {{
+                row[2][$store.state.selectedDataset][
+                  $store.state.selectedPhenotype
+                ]
+              }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-</body>
-<script src="/www/js/phenotypeSelect.js"></script>
-<script src="/www/js/datasetSelect.js"></script>
-<script>
+  </body>
+  <script src="/www/js/phenotypeSelect.js"></script>
+  <script src="/www/js/datasetSelect.js"></script>
+  <script>
+    function tableColumns(json, ...columns) {
+      let columnIndices = {};
+
+      // don't return anything if an error or empty
+      if (json.is_error || !json.variants) {
+        return [];
+      }
+
+      // map column names to indices
+      for (let i in columns) {
+        let col = columns[i];
+
+        // use the first variant since they are all in the same order
+        json.variants[0].forEach((obj, i) => {
+          if (!!obj[col]) columnIndices[col] = i;
+        });
+
+        if (!columnIndices[col]) {
+          // TODO: warn indicating that the column doesn't exist?
+        }
+      }
+
+      // map all the variants into the rows
+      return json.variants.map(v => {
+        return columns.map(col => v[columnIndices[col]][col]);
+      });
+    }
+
     let app = new Vue({
-        el: "#app",
+      el: "#app",
 
-        // executed when the app starts
-        created() {
-            this.$store.dispatch('getPhenotypes');
+      // executed when the app starts
+      created() {
+        this.$store.dispatch("getPhenotypes");
+      },
+
+      // application state for the page
+      store: new Vuex.Store({
+        state: {
+          phenotypeMap: {},
+          datasetList: [],
+          variants: [],
+          tableData: [],
+
+          // user state
+          selectedPhenotype: null,
+          selectedDataset: null,
+          pValueThreshold: 0.00005
         },
+        mutations: {
+          updatePhenotypeMap(state, phenotypeMap) {
+            state.phenotypeMap = phenotypeMap;
+          },
+          updateDatasetList(state, datasetList) {
+            state.datasetList = datasetList;
+          },
+          updateVariants(state, variants) {
+            state.variants = variants;
+          },
+          selectPhenotype(state, phenotype) {
+            state.selectedPhenotype = phenotype;
+          },
+          selectDataset(state, dataset) {
+            state.selectedDataset = dataset;
+          },
+          setPValueThreshold(state, pValue) {
+            state.pValueThreshold = pValue;
+          },
+          setTableData(state, data) {
+            state.tableData = data;
+          }
+        },
+        actions: {
+          async getPhenotypes(context) {
+            let json = await fetch("/getPhenotypes").then(resp => resp.json());
 
-        // application state for the page
-        store: new Vuex.Store({
-            state: {
-                phenotypeMap: {},
-                datasetList: [],
-                variants: [],
+            context.commit("updatePhenotypeMap", json);
+          },
 
-                // user state
-                selectedPhenotype: null,
-                selectedDataset: null,
-                pValueThreshold: 0.00005,
-            },
-            mutations: {
-                updatePhenotypeMap(state, phenotypeMap) {
-                    state.phenotypeMap = phenotypeMap;
-                },
-                updateDatasetList(state, datasetList) {
-                    state.datasetList = datasetList;
-                },
-                updateVariants(state, variants) {
-                    state.variants = variants;
-                },
-                selectPhenotype(state, phenotype) {
-                    state.selectedPhenotype = phenotype;
-                },
-                selectDataset(state, dataset) {
-                    state.selectedDataset = dataset;
-                },
-                setPValueThreshold(state, pValue) {
-                    state.pValueThreshold = pValue;
-                },
-            },
-            actions: {
-                async getPhenotypes(context) {
-                    let json = await fetch("/getPhenotypes")
-                        .then(resp => resp.json());
+          async selectPhenotype(context, phenotype) {
+            let json = await fetch(`/getDatasets/${phenotype}`).then(resp =>
+              resp.json()
+            );
 
-                    context.commit('updatePhenotypeMap', json);
+            // commit changes
+            context.commit("selectPhenotype", phenotype);
+            context.commit("updateDatasetList", json);
+          },
+
+          async selectDataset(context, dataset) {
+            context.commit("selectDataset", dataset);
+            context.dispatch("performGetData");
+          },
+
+          async setPValueThreshold(context, pValue) {
+            context.commit("setPValueThreshold", pValue);
+            context.dispatch("performGetData");
+          },
+
+          async performGetData(context) {
+            let phenotype = this.state.selectedPhenotype;
+            let dataset = this.state.selectedDataset;
+            let pvalue = this.state.pValueThreshold;
+
+            // simple call
+            let body = {
+              passback: "abc123",
+              entity: "variant",
+              page_start: -1,
+              page_size: -1,
+              limit: 500,
+              count: false,
+              result_format: "verbose",
+              properties: {
+                cproperty: [
+                  "CHROM",
+                  "CLOSEST_GENE",
+                  "DBSNP_ID",
+                  "POS",
+                  "VAR_ID"
+                ],
+                dproperty: { MAF: [dataset] },
+                pproperty: {
+                  ODDS_RATIO: { [dataset]: [phenotype] },
+                  P_VALUE: { [dataset]: [phenotype] }
+                }
+              },
+              filters: [
+                {
+                  dataset_id: dataset,
+                  phenotype: phenotype,
+                  operand: "P_VALUE",
+                  operator: "LT",
+                  value: pvalue,
+                  operand_type: "FLOAT"
                 },
+                {
+                  dataset_id: dataset,
+                  phenotype: phenotype,
+                  operand: "P_VALUE",
+                  operator: "GT",
+                  value: 0.0,
+                  operand_type: "FLOAT"
+                }
+              ]
+            };
 
-                async selectPhenotype(context, phenotype) {
-                    let json = await fetch(`/getDatasets/${phenotype}`)
-                        .then(resp => resp.json());
+            // download the variants
+            let json = await fetch(`/getData`, {
+              method: "POST",
+              body: JSON.stringify(body)
+            }).then(resp => resp.json());
 
-                    // commit changes
-                    context.commit('selectPhenotype', phenotype);
-                    context.commit('updateDatasetList', json);
-                },
-
-                async selectDataset(context, dataset) {
-                    context.commit('selectDataset', dataset);
-                    context.dispatch('performGetData');
-                },
-
-                async setPValueThreshold(context, pValue) {
-                    context.commit('setPValueThreshold', pValue);
-                    context.dispatch('performGetData');
-                },
-
-                async performGetData(context) {
-                    let phenotype = this.state.selectedPhenotype;
-                    let dataset = this.state.selectedDataset;
-                    let pvalue = this.state.pValueThreshold;
-
-                    // simple call
-                    let body = {
-                        passback: "abc123",
-                        entity: "variant",
-                        page_start: -1,
-                        page_size: -1,
-                        limit: 500,
-                        count: false,
-                        result_format: "verbose",
-                        properties: {
-                            cproperty: ["CHROM", "CLOSEST_GENE", "DBSNP_ID", "POS", "VAR_ID"],
-                            dproperty: { MAF: [dataset] },
-                            pproperty: {
-                                ODDS_RATIO: { [dataset]: [phenotype] },
-                                P_VALUE: { [dataset]: [phenotype] }
-                            }
-                        },
-                        filters: [
-                            {
-                                dataset_id: dataset,
-                                phenotype: phenotype,
-                                operand: "P_VALUE",
-                                operator: "LT",
-                                value: pvalue,
-                                operand_type: "FLOAT"
-                            },
-                            {
-                                dataset_id: dataset,
-                                phenotype: phenotype,
-                                operand: "P_VALUE",
-                                operator: "GT",
-                                value: 0.0,
-                                operand_type: "FLOAT"
-                            }
-                        ]
-                    };
-
-                    // download the variants
-                    let json = await fetch(`/getData`, { method: 'POST', body: JSON.stringify(body) })
-                        .then(resp => resp.json());
-
-                    if (json.is_error) {
-                        console.error(json.error_message);
-                    } else {
-                        context.commit('updateVariants', json.variants);
-                    }
-                },
-            },
-        }),
+            if (json.is_error) {
+              console.error(json.error_message);
+            } else {
+              context.commit("updateVariants", json.variants);
+              let tableData = tableColumns(
+                json,
+                "VAR_ID",
+                "CLOSEST_GENE",
+                "P_VALUE"
+              );
+              context.commit("setTableData", tableData);
+            }
+          }
+        }
+      })
     });
-</script>
-
+  </script>
 </html>
