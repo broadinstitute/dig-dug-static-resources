@@ -10,6 +10,11 @@
     <script src="https://unpkg.com/vue"></script>
     <script src="https://unpkg.com/vuex"></script>
     <script src="https://unpkg.com/jquery"></script>
+    <!-- Load c3.css -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.css" rel="stylesheet">
+    <!-- Load d3.js and c3.js -->
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.js"></script>
 
     <!-- jquery plugins -->
     <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
@@ -72,10 +77,16 @@
         />
       </div>
 
+        <manhattan-plot inline-template>
+            <div id="chart"></div>
+        </manhattan-plot>
+
       <!-- the final list of variants -->
       <table class="table table-striped" style="margin-top:20px">
         <thead class="thead-dark">
           <th>rsid</th>
+          <th>chromosomes</th>
+          <th>position</th>
           <th>closest gene</th>
           <th>p-value</th>
         </thead>
@@ -83,9 +94,11 @@
           <tr v-for="(row, index) in $store.state.tableData">
             <td>{{ row[0] }}</td>
             <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
             <td>
               {{
-                row[2][$store.state.selectedDataset][
+                row[4][$store.state.selectedDataset][
                   $store.state.selectedPhenotype
                 ]
               }}
@@ -93,10 +106,12 @@
           </tr>
         </tbody>
       </table>
+
     </div>
   </body>
-  <script src="/www/js/phenotypeSelect.js"></script>
-  <script src="/www/js/datasetSelect.js"></script>
+    <script src="/www/js/phenotypeSelect.js"></script>
+    <script src="/www/js/datasetSelect.js"></script>
+    <script src="/www/js/manhattan.js"></script>
   <script>
     function tableColumns(json, ...columns) {
       let columnIndices = {};
@@ -258,6 +273,8 @@
               let tableData = tableColumns(
                 json,
                 "VAR_ID",
+                "CHROM",
+                "POS",
                 "CLOSEST_GENE",
                 "P_VALUE"
               );
