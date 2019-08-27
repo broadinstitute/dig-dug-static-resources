@@ -11,7 +11,10 @@
     <script src="https://unpkg.com/vuex"></script>
     <script src="https://unpkg.com/jquery"></script>
     <!-- Load c3.css -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.css" rel="stylesheet">
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.css"
+      rel="stylesheet"
+    />
     <!-- Load d3.js and c3.js -->
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.js"></script>
@@ -77,9 +80,9 @@
         />
       </div>
 
-        <manhattan-plot inline-template>
-            <div id="chart"></div>
-        </manhattan-plot>
+      <manhattan-plot inline-template>
+        <div id="chart"></div>
+      </manhattan-plot>
 
       <!-- the final list of variants -->
       <table class="table table-striped" style="margin-top:20px">
@@ -106,41 +109,13 @@
           </tr>
         </tbody>
       </table>
-
     </div>
   </body>
-    <script src="/www/js/phenotypeSelect.js"></script>
-    <script src="/www/js/datasetSelect.js"></script>
-    <script src="/www/js/manhattan.js"></script>
+  <script src="/www/js/phenotypeSelect.js"></script>
+  <script src="/www/js/datasetSelect.js"></script>
+  <script src="/www/js/manhattan.js"></script>
+  <script src="/www/js/tableColumns.js"></script>
   <script>
-    function tableColumns(json, ...columns) {
-      let columnIndices = {};
-
-      // don't return anything if an error or empty
-      if (json.is_error || !json.variants) {
-        return [];
-      }
-
-      // map column names to indices
-      for (let i in columns) {
-        let col = columns[i];
-
-        // use the first variant since they are all in the same order
-        json.variants[0].forEach((obj, i) => {
-          if (!!obj[col]) columnIndices[col] = i;
-        });
-
-        if (!columnIndices[col]) {
-          // TODO: warn indicating that the column doesn't exist?
-        }
-      }
-
-      // map all the variants into the rows
-      return json.variants.map(v => {
-        return columns.map(col => v[columnIndices[col]][col]);
-      });
-    }
-
     let app = new Vue({
       el: "#app",
 
