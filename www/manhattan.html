@@ -71,6 +71,7 @@
         </select>
       </dataset-select>
 
+      <!-- R2 threshold -->
       <!-- getData filters -->
       <div v-if="$store.state.dataset">
         P-value:
@@ -113,6 +114,7 @@
   </body>
   <script src="/www/js/phenotypeSelect.js"></script>
   <script src="/www/js/datasetSelect.js"></script>
+  <script src="/www/js/r2ThresholdSelect.js"></script>
   <script src="/www/js/manhattan.js"></script>
   <script src="/www/js/tableColumns.js"></script>
   <script>
@@ -135,7 +137,8 @@
           // user state
           selectedPhenotype: null,
           selectedDataset: null,
-          pValueThreshold: 0.00005
+          pValueThreshold: 0.00005,
+          selectedr2Threshold:null //default r2 = 1
         },
         mutations: {
           updatePhenotypeMap(state, phenotypeMap) {
@@ -153,6 +156,9 @@
           selectDataset(state, dataset) {
             state.selectedDataset = dataset;
           },
+          selectedr2Threshold(state, r2){
+              state.selectedr2Threshold = r2;
+          },
           setPValueThreshold(state, pValue) {
             state.pValueThreshold = pValue;
           },
@@ -163,7 +169,6 @@
         actions: {
           async getPhenotypes(context) {
             let json = await fetch("/getPhenotypes").then(resp => resp.json());
-
             context.commit("updatePhenotypeMap", json);
           },
 
@@ -186,6 +191,43 @@
             context.commit("setPValueThreshold", pValue);
             context.dispatch("performGetData");
           },
+
+          async setr2Threshold(context, r2threshold) {
+            context.commit("selectedr2Threshold", r2threshold);
+            context.dispatch("getClumpData");
+          },
+
+          async getClumpData(context) {
+            let phenotype = this.state.selectedPhenotype;
+            let dataset = this.state.selectedDataset;
+            let r2threshold = this.state.selectedr2Threshold;
+
+            // simple call
+            let body = {"phenotype": phenotype,"dataset": dataset, "r2": r2threshold,
+                        "pagination":{"size":500,"offset":0} }
+
+            // download the variants
+            let json = await fetch(`/getClumpData`, {
+              method: "POST",
+              body: JSON.stringify(body)
+            }).then(resp => resp.json());
+
+            if (json.is_error) {
+              console.error(json.error_message);
+            } else {
+                //updateVariants - getClumpData and getData use same state
+                context.commit("updateVariants", json.variants);
+                let tableData = clumpTableColumns(
+                    json,
+                    "VAR_ID",
+                    "CHROM",
+                    "POS",
+                    "CLOSEST_GENE",
+                    "P_VALUE"
+                    );
+              context.commit("setTableData", tableData);
+            }
+        },
 
           async performGetData(context) {
             let phenotype = this.state.selectedPhenotype;
@@ -214,7 +256,8 @@
                   ODDS_RATIO: { [dataset]: [phenotype] },
                   P_VALUE: { [dataset]: [phenotype] }
                 }
-              },
+            },
+            
               filters: [
                 {
                   dataset_id: dataset,

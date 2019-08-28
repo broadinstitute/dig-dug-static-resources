@@ -1,0 +1,14 @@
+<r2-threshold-select inline-template>
+  <select
+      v-model="r2threshold"
+      @change="$store.dispatch('setr2Threshold',r2threshold)"
+  >
+      <option value="0.1">0.1</option>
+      <option value="0.2">0.2</option>
+      <option value="0.4">0.4</option>
+      <option value="0.6">0.6</option>
+      <option value="0.8">0.8</option>
+      <option value="1" selected>1</option>
+  </select>
+
+</r2-threshold-select>

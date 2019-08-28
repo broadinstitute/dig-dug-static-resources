@@ -14,7 +14,6 @@ function tableColumns(json, ...columns) {
     json.variants[0].forEach((obj, i) => {
       if (!!obj[col]) columnIndices[col] = i;
     });
-
     if (!columnIndices[col]) {
       // TODO: warn indicating that the column doesn't exist?
     }
@@ -24,4 +23,29 @@ function tableColumns(json, ...columns) {
   return json.variants.map(v => {
     return columns.map(col => v[columnIndices[col]][col]);
   });
+}
+
+function clumpTableColumns(json, ...columns){
+    let columnIndices = {};
+
+    // don't return anything if an error or empty
+    if (json.is_error || !json.variants) {
+      return [];
+    }
+    else{
+        for (let i in columns) {
+          let col = columns[i];
+
+          // use the first variant since they are all in the same order
+          json.variants.forEach((obj) => {
+            if (!!obj[col]) columnIndices[col] = obj[col];
+          });
+          // if (!columnIndices[col]) {
+          //   // TODO: warn indicating that the column doesn't exist?
+          // }
+        }
+        return json.variants.map(v => {
+          return columns.map(col => v[columnIndices[col]]);
+        });
+    }
 }
