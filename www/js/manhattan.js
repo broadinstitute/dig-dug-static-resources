@@ -6,6 +6,9 @@ Vue.component("manhattan-plot", {
   },
   mounted() {
     this.chart = c3.generate({
+      size: {
+        height: 500
+      },
       data: {
         xs: {
           data: "data_x"
@@ -16,6 +19,9 @@ Vue.component("manhattan-plot", {
       zoom: {
         enabled: true,
         rescale: true
+      },
+      point: {
+        r: 5
       },
       bindto: "#chart",
       axis: {
@@ -53,7 +59,10 @@ Vue.component("manhattan-plot", {
         });
         //console.log("data", ys);
         this.chart.load({
-          columns: [xs, ys]
+          columns: [xs, ys],
+          names: {
+            data: this.$store.state.selectedDataset
+          }
         });
       }
     });
