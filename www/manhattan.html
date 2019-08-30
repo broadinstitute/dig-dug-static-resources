@@ -99,13 +99,7 @@
             <td>{{ row[1] }}</td>
             <td>{{ row[2] }}</td>
             <td>{{ row[3] }}</td>
-            <td>
-              {{
-                row[4][$store.state.selectedDataset][
-                  $store.state.selectedPhenotype
-                ]
-              }}
-            </td>
+            <td>{{ current_pvalue(row[4]) }}</td>
           </tr>
         </tbody>
       </table>
@@ -122,6 +116,13 @@
       // executed when the app starts
       created() {
         this.$store.dispatch("getPhenotypes");
+      },
+      methods: {
+        current_pvalue(obj) {
+          let p = Object.values(obj)[0];
+          let d = Object.keys(p)[0];
+          return p[d];
+        }
       },
 
       // application state for the page
