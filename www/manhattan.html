@@ -72,13 +72,13 @@
       </dataset-select>
 
       <!-- getData filters -->
-      <div v-if="$store.state.dataset">
+      <!-- <div v-if="$store.state.dataset">
         P-value:
         <input
           v-model="$store.state.pValueThreshold"
           @change="$store.dispatch('performGetData')"
         />
-      </div>
+      </div> -->
 
       <manhattan-plot inline-template>
         <div id="chart"></div>
@@ -158,6 +158,9 @@
           },
           setTableData(state, data) {
             state.tableData = data;
+          },
+          setGraphData(state, data) {
+            state.graphData = data;
           }
         },
         actions: {
@@ -198,7 +201,7 @@
               entity: "variant",
               page_start: -1,
               page_size: -1,
-              limit: 500,
+              limit: 25,
               count: false,
               result_format: "verbose",
               properties: {
@@ -236,25 +239,59 @@
             };
 
             // download the variants
-            let json = await fetch(`/getData`, {
+            let tableJson = fetch(`/getData`, {
               method: "POST",
               body: JSON.stringify(body)
-            }).then(resp => resp.json());
+            })
+              .then(resp => resp.json())
+              .then(json =>
+                tableColumns(
+                  json,
+                  "VAR_ID",
+                  "CHROM",
+                  "POS",
+                  "CLOSEST_GENE",
+                  "P_VALUE"
+                )
+              )
+              .then(tableData => context.commit("setTableData", tableData));
 
-            if (json.is_error) {
-              console.error(json.error_message);
-            } else {
-              context.commit("updateVariants", json.variants);
-              let tableData = tableColumns(
-                json,
-                "VAR_ID",
-                "CHROM",
-                "POS",
-                "CLOSEST_GENE",
-                "P_VALUE"
-              );
-              context.commit("setTableData", tableData);
+            // if (json.is_error) {
+            //   console.error(json.error_message);
+            // } else {
+            //   context.commit("updateVariants", json.variants);
+            //   // let tableData = tableColumns(
+            //   //   json,
+            //   //   "VAR_ID",
+            //   //   "CHROM",
+            //   //   "POS",
+            //   //   "CLOSEST_GENE",
+            //   //   "P_VALUE"
+            //   // );
+            //   // context.commit("setTableData", tableData);
+            // }
+
+            //change the output limit for the graph
+            function replacer(key, value) {
+              return key == "limit" ? (value = 500) : value;
             }
+
+            let graphJson = fetch(`/getData`, {
+              method: "POST",
+              body: JSON.stringify(body, replacer)
+            })
+              .then(resp => resp.json())
+              .then(json =>
+                tableColumns(
+                  json,
+                  "VAR_ID",
+                  "CHROM",
+                  "POS",
+                  "CLOSEST_GENE",
+                  "P_VALUE"
+                )
+              )
+              .then(tableData => context.commit("setGraphData", tableData));
           }
         }
       })

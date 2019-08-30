@@ -44,11 +44,11 @@ Vue.component("manhattan-plot", {
       }
     });
     this.$store.subscribe((mutation, state) => {
-      if (mutation.type == "setTableData") {
+      if (mutation.type == "setGraphData") {
         let xs = ["data_x"];
         let ys = ["data"];
 
-        this.$store.state.tableData.forEach(v => {
+        this.$store.state.graphData.forEach(v => {
           let p_value =
             v[4][this.$store.state.selectedDataset][
               this.$store.state.selectedPhenotype
