@@ -255,22 +255,8 @@
                   "P_VALUE"
                 )
               )
-              .then(tableData => context.commit("setTableData", tableData));
-
-            // if (json.is_error) {
-            //   console.error(json.error_message);
-            // } else {
-            //   context.commit("updateVariants", json.variants);
-            //   // let tableData = tableColumns(
-            //   //   json,
-            //   //   "VAR_ID",
-            //   //   "CHROM",
-            //   //   "POS",
-            //   //   "CLOSEST_GENE",
-            //   //   "P_VALUE"
-            //   // );
-            //   // context.commit("setTableData", tableData);
-            // }
+              .then(tableData => context.commit("setTableData", tableData))
+              .catch(error => console.log(error.message));
 
             //change the output limit for the graph
             function replacer(key, value) {
@@ -292,7 +278,8 @@
                   "P_VALUE"
                 )
               )
-              .then(tableData => context.commit("setGraphData", tableData));
+              .then(tableData => context.commit("setGraphData", tableData))
+              .catch(error => console.log(error.message));
           }
         }
       })
