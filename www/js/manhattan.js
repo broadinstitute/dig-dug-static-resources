@@ -57,13 +57,17 @@ Vue.component("manhattan-plot", {
           xs.push(pos); // Pos
           ys.push(-Math.log10(p_value)); // P_VALUE
         });
-        //console.log("data", ys);
-        this.chart.load({
-          columns: [xs, ys],
-          names: {
-            data: this.$store.state.selectedDataset
-          }
-        });
+
+        if (this.$store.state.graphData.length == 0) {
+          this.chart.unload({});
+        } else {
+          this.chart.load({
+            columns: [xs, ys],
+            names: {
+              data: this.$store.state.selectedDataset
+            }
+          });
+        }
       }
     });
   }

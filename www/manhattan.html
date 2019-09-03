@@ -178,10 +178,14 @@
 
             // commit changes
             context.commit("selectPhenotype", phenotype);
+            context.commit("setTableData", []);
+            context.commit("setGraphData", []);
             context.commit("updateDatasetList", json);
           },
 
           async selectDataset(context, dataset) {
+            context.commit("setTableData", []);
+            context.commit("setGraphData", []);
             context.commit("selectDataset", dataset);
             context.dispatch("performGetData");
           },
