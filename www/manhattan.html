@@ -10,6 +10,8 @@
     <script src="https://unpkg.com/vue"></script>
     <script src="https://unpkg.com/vuex"></script>
     <script src="https://unpkg.com/jquery"></script>
+    <script src="/www/js/modules/phenotypeModule.js"></script>
+    <script src="/www/js/modules/datasetModule.js"></script>
     <!-- Load c3.css -->
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.css"
@@ -40,36 +42,11 @@
     <div id="app">
       <!-- Create a phenotype selection combo box component -->
       Phenotype:
-      <phenotype-select inline-template>
-        <select
-          v-model="phenotype"
-          @change="$store.dispatch('selectPhenotype', phenotype)"
-        >
-          <optgroup
-            v-for="(item, index) in $store.state.phenotypeMap"
-            :label="index"
-          >
-            <option
-              v-for="listvalue in $store.state.phenotypeMap[index]"
-              :value="listvalue"
-              >{{ listvalue }}
-            </option>
-          </optgroup>
-        </select>
-      </phenotype-select>
+      <phenotype-select> </phenotype-select>
 
       <!-- Create a dataset selection combo box component -->
       Dataset:
-      <dataset-select inline-template>
-        <select
-          v-model="dataset"
-          @change="$store.dispatch('selectDataset', dataset)"
-        >
-          <option v-for="item in $store.state.datasetList" :value="item">{{
-            item
-          }}</option>
-        </select>
-      </dataset-select>
+      <dataset-select> </dataset-select>
 
       <!-- getData filters -->
       <!-- <div v-if="$store.state.dataset">
@@ -105,14 +82,16 @@
       </table>
     </div>
   </body>
-  <script src="/www/js/phenotypeSelect.js"></script>
-  <script src="/www/js/datasetSelect.js"></script>
+
   <script src="/www/js/manhattan.js"></script>
   <script src="/www/js/tableColumns.js"></script>
   <script>
     let app = new Vue({
       el: "#app",
-
+      components: {
+        phenotypeSelect,
+        datasetSelect
+      },
       // executed when the app starts
       created() {
         this.$store.dispatch("getPhenotypes");
@@ -127,6 +106,11 @@
 
       // application state for the page
       store: new Vuex.Store({
+        modules: {
+          phenotype: phenotypeSelect,
+          dataset: datasetSelect
+        },
+
         state: {
           phenotypeMap: {},
           datasetList: [],
