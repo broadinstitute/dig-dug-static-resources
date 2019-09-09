@@ -1,37 +1,33 @@
-const datasetSelect = new Vue.component("dataset-select", {
+const datasetSelect = Vue.component("dataset-select", {
   template: `<select
-          v-model="dataset"
-          @change="$store.dispatch('selectDataset', dataset)"
+          v-model="selectedDataset"
+          @change="$store.dispatch('onDatasetChange', selectedDataset)"
         >
-          <option v-for="item in $store.state.datasetList" :value="item">{{
+          <option v-for="item in $store.state.dataset.datasetList" :value="item">{{
             item
           }}</option>
         </select>`,
   data() {
-    return { selectedDataset: null };
-  }
+    return { selectedDataset: null,
+        };
+    }
 });
 
 const datasetModule = {
-  modules: {
-    dataset: datasetSelect
-  },
-
   state: {
     datasetList: null
   },
   mutations: {
     updateDatasetList(state, datasetList) {
       state.datasetList = datasetList;
+        }
     },
-    selectDataset(state, dataset) {
-      state.selectedDataset = dataset;
-    }
-  },
   actions: {
-    async selectDataset(context, dataset) {
-      context.commit("selectDataset", dataset);
-      context.dispatch("performGetData");
+      async getDatasets(context, phenotype) {
+        let json = await fetch(`/getDatasets/${phenotype}`).then(resp =>
+          resp.json()
+      );
+        context.commit("updateDatasetList", json);
     }
   }
 };
