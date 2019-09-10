@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Vue Test</title>
     <meta charset="UTF-8" />
@@ -12,10 +13,7 @@
     <script src="https://unpkg.com/jquery"></script>
 
     <!-- Load c3.css -->
-    <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.css"
-    rel="stylesheet"
-    />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.css" rel="stylesheet" />
     <!-- Load d3.js and c3.js -->
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.js"></script>
@@ -24,28 +22,20 @@
     <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 
     <!-- stylesheets -->
-    <link
-    rel="stylesheet"
-    href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-    crossorigin="anonymous"
-    />
-    <link
-    rel="stylesheet"
-    type="text/css"
-    href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css"
-    />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
 </head>
 
 <body>
     <div id="app">
         <!-- Create a phenotype selection combo box component -->
         Phenotype:
-        <phenotype-select> </phenotype-select>
+        <phenotype-select v-bind:phenotypes='phenotypeMap'> </phenotype-select>
 
         <!-- Create a dataset selection combo box component -->
         Dataset:
-        <dataset-select>  </dataset-select>
+        <dataset-select v-bind:datasets="datasetList"> </dataset-select>
 
         <!-- getData filters -->
         <!-- <div v-if="$store.state.dataset">
@@ -56,198 +46,209 @@
         />
     </div> -->
 
-    <manhattan-plot inline-template>
-        <div id="chart"></div>
-    </manhattan-plot>
+        <manhattan-plot inline-template>
+            <div id="chart"></div>
+        </manhattan-plot>
 
-    <!-- the final list of variants -->
-    <table class="table table-striped" style="margin-top:20px">
-        <thead class="thead-dark">
-            <th>rsid</th>
-            <th>chromosomes</th>
-            <th>position</th>
-            <th>closest gene</th>
-            <th>p-value</th>
-        </thead>
-        <tbody>
-            <tr v-for="(row, index) in $store.state.tableData">
-                <td>{{ row[0] }}</td>
-                <td>{{ row[1] }}</td>
-                <td>{{ row[2] }}</td>
-                <td>{{ row[3] }}</td>
-                <td>{{ current_pvalue(row[4]) }}</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+        <!-- the final list of variants -->
+        <table class="table table-striped" style="margin-top:20px">
+            <thead class="thead-dark">
+                <th>rsid</th>
+                <th>chromosomes</th>
+                <th>position</th>
+                <th>closest gene</th>
+                <th>p-value</th>
+            </thead>
+            <tbody>
+                <tr v-for="(row, index) in $store.state.tableData">
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                    <td>{{ current_pvalue(row[4]) }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </body>
 
+<script src="/www/js/components/phenotypeSelect.js"></script>
+<script src="/www/js/components/datasetSelect.js"></script>
 <script src="/www/js/modules/phenotypeModule.js"></script>
 <script src="/www/js/modules/datasetModule.js"></script>
 <script src="/www/js/manhattan.js"></script>
 <script src="/www/js/tableColumns.js"></script>
 <script>
-let app = new Vue({
-    el: "#app",
-    components: {
-        phenotypeSelect,
-        datasetSelect
-    },
-    // executed when the app starts
-    created() {
-        this.$store.dispatch("getPhenotypes");
-    },
-    methods: {
-        current_pvalue(obj) {
-            let p = Object.values(obj)[0];
-            let d = Object.keys(p)[0];
-            return p[d];
-        }
-    },
-
-    // application state for the page
-    store: new Vuex.Store({
-        modules: {
-            phenotypeModule,
-            datasetModule
+    let app = new Vue({
+        el: "#app",
+        components: {
+            phenotypeSelect,
+            datasetSelect
         },
-
-        state: {
-            variants: [],
-            tableData: [],
-
-            // user state
-            pValueThreshold: 0.00005
+        // executed when the app starts
+        created() {
+            this.$store.dispatch("getPhenotypes");
         },
-        mutations: {
-            setSelectedPhenotype(state,phenotype){
-                state.selectedPhenotype = phenotype;
+        computed: {
+            phenotypeMap() {
+                return this.$store.state.phenotypeModule.phenotypeMap
             },
-            setSelectedDataset(state, dataset){
-                state.selectedDataset = dataset;
-            },
-            updateVariants(state, variants) {
-                state.variants = variants;
-            },
-            setPValueThreshold(state, pValue) {
-                state.pValueThreshold = pValue;
-            },
-            setTableData(state, data) {
-                state.tableData = data;
-            },
-            setGraphData(state, data) {
-                state.graphData = data;
+            datasetList() {
+                return this.$store.state.datasetModule.datasetList
             }
         },
-        actions: {
-            onPhenotypeChange(context, selectedPhenotype){
-                context.commit("setSelectedPhenotype", selectedPhenotype);
-                context.dispatch('getDatasets',selectedPhenotype);
-                context.commit("setTableData",[]);
-                context.commit("setGraphData",[]);
-            },
-            onDatasetChange(context,selectedDataset){
-                context.commit("setSelectedDataset", selectedDataset);
-                context.dispatch('performGetData');
-                context.commit("setTableData",[]);
-                context.commit("setGraphData",[]);
-            },
-            async setPValueThreshold(context, pValue) {
-                context.commit("setPValueThreshold", pValue);
-                context.dispatch("performGetData");
-            },
-            async performGetData(context) {
-                let phenotype = this.state.selectedPhenotype;
-                let dataset = this.state.selectedDataset;
-                let pvalue = this.state.pValueThreshold;
+        methods: {
+            current_pvalue(obj) {
+                let p = Object.values(obj)[0];
+                let d = Object.keys(p)[0];
+                return p[d];
+            }
+        },
 
-                // simple call
-                let body = {
-                    passback: "abc123",
-                    entity: "variant",
-                    page_start: -1,
-                    page_size: -1,
-                    limit: 25,
-                    count: false,
-                    result_format: "verbose",
-                    properties: {
-                        cproperty: [
-                            "CHROM",
-                            "CLOSEST_GENE",
-                            "DBSNP_ID",
-                            "POS",
-                            "VAR_ID"
-                        ],
-                        dproperty: { MAF: [dataset] },
-                        pproperty: {
-                            ODDS_RATIO: { [dataset]: [phenotype] },
-                            P_VALUE: { [dataset]: [phenotype] }
-                        }
-                    },
-                    filters: [
-                        {
-                            dataset_id: dataset,
-                            phenotype: phenotype,
-                            operand: "P_VALUE",
-                            operator: "LT",
-                            value: pvalue,
-                            operand_type: "FLOAT"
-                        },
-                        {
-                            dataset_id: dataset,
-                            phenotype: phenotype,
-                            operand: "P_VALUE",
-                            operator: "GT",
-                            value: 0.0,
-                            operand_type: "FLOAT"
-                        }
-                    ]
-                };
+        // application state for the page
+        store: new Vuex.Store({
+            modules: {
+                phenotypeModule,
+                datasetModule
+            },
 
-                // download the variants
-                let tableJson = fetch(`/getData`, {
-                    method: "POST",
-                    body: JSON.stringify(body)
-                })
-                .then(resp => resp.json())
-                .then(json =>
-                    tableColumns(
-                        json,
-                        "VAR_ID",
-                        "CHROM",
-                        "POS",
-                        "CLOSEST_GENE",
-                        "P_VALUE"
-                    )
-                )
-                .then(tableData => context.commit("setTableData", tableData))
-                .catch(error => console.log(error.message));
+            state: {
+                variants: [],
+                tableData: [],
 
-                //change the output limit for the graph
-                function replacer(key, value) {
-                    return key == "limit" ? (value = 500) : value;
+                // user state
+                pValueThreshold: 0.00005
+            },
+            mutations: {
+                setSelectedPhenotype(state, phenotype) {
+                    state.selectedPhenotype = phenotype;
+                },
+                setSelectedDataset(state, dataset) {
+                    state.selectedDataset = dataset;
+                },
+                updateVariants(state, variants) {
+                    state.variants = variants;
+                },
+                setPValueThreshold(state, pValue) {
+                    state.pValueThreshold = pValue;
+                },
+                setTableData(state, data) {
+                    state.tableData = data;
+                },
+                setGraphData(state, data) {
+                    state.graphData = data;
                 }
+            },
+            actions: {
+                onPhenotypeChange(context, selectedPhenotype) {
+                    context.commit("setSelectedPhenotype", selectedPhenotype);
+                    context.dispatch('getDatasets', selectedPhenotype);
+                    context.commit("setTableData", []);
+                    context.commit("setGraphData", []);
+                },
+                onDatasetChange(context, selectedDataset) {
+                    context.commit("setSelectedDataset", selectedDataset);
+                    context.dispatch('performGetData');
+                    context.commit("setTableData", []);
+                    context.commit("setGraphData", []);
+                },
+                async setPValueThreshold(context, pValue) {
+                    context.commit("setPValueThreshold", pValue);
+                    context.dispatch("performGetData");
+                },
+                async performGetData(context) {
+                    let phenotype = this.state.selectedPhenotype;
+                    let dataset = this.state.selectedDataset;
+                    let pvalue = this.state.pValueThreshold;
 
-                let graphJson = fetch(`/getData`, {
-                    method: "POST",
-                    body: JSON.stringify(body, replacer)
-                })
-                .then(resp => resp.json())
-                .then(json =>
-                    tableColumns(
-                        json,
-                        "VAR_ID",
-                        "CHROM",
-                        "POS",
-                        "CLOSEST_GENE",
-                        "P_VALUE"
-                    )
-                )
-                .then(tableData => context.commit("setGraphData", tableData))
-                .catch(error => console.log(error.message));
+                    // simple call
+                    let body = {
+                        passback: "abc123",
+                        entity: "variant",
+                        page_start: -1,
+                        page_size: -1,
+                        limit: 25,
+                        count: false,
+                        result_format: "verbose",
+                        properties: {
+                            cproperty: [
+                                "CHROM",
+                                "CLOSEST_GENE",
+                                "DBSNP_ID",
+                                "POS",
+                                "VAR_ID"
+                            ],
+                            dproperty: { MAF: [dataset] },
+                            pproperty: {
+                                ODDS_RATIO: { [dataset]: [phenotype] },
+                                P_VALUE: { [dataset]: [phenotype] }
+                            }
+                        },
+                        filters: [
+                            {
+                                dataset_id: dataset,
+                                phenotype: phenotype,
+                                operand: "P_VALUE",
+                                operator: "LT",
+                                value: pvalue,
+                                operand_type: "FLOAT"
+                            },
+                            {
+                                dataset_id: dataset,
+                                phenotype: phenotype,
+                                operand: "P_VALUE",
+                                operator: "GT",
+                                value: 0.0,
+                                operand_type: "FLOAT"
+                            }
+                        ]
+                    };
+
+                    // download the variants
+                    let tableJson = fetch(`/getData`, {
+                        method: "POST",
+                        body: JSON.stringify(body)
+                    })
+                        .then(resp => resp.json())
+                        .then(json =>
+                            tableColumns(
+                                json,
+                                "VAR_ID",
+                                "CHROM",
+                                "POS",
+                                "CLOSEST_GENE",
+                                "P_VALUE"
+                            )
+                        )
+                        .then(tableData => context.commit("setTableData", tableData))
+                        .catch(error => console.log(error.message));
+
+                    //change the output limit for the graph
+                    function replacer(key, value) {
+                        return key == "limit" ? (value = 500) : value;
+                    }
+
+                    let graphJson = fetch(`/getData`, {
+                        method: "POST",
+                        body: JSON.stringify(body, replacer)
+                    })
+                        .then(resp => resp.json())
+                        .then(json =>
+                            tableColumns(
+                                json,
+                                "VAR_ID",
+                                "CHROM",
+                                "POS",
+                                "CLOSEST_GENE",
+                                "P_VALUE"
+                            )
+                        )
+                        .then(tableData => context.commit("setGraphData", tableData))
+                        .catch(error => console.log(error.message));
+                }
             }
-        }
-    })
-});
+        })
+    });
 </script>
+
 </html>

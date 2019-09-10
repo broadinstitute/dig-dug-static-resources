@@ -1,24 +1,3 @@
-const phenotypeSelect = Vue.component("phenotype-select", {
-    template: `<select
-          v-model="selectedPhenotype"
-          @change="$store.dispatch('onPhenotypeChange', selectedPhenotype)"
-        >
-          <optgroup
-            v-for="(item, index) in $store.state.phenotypeModule.phenotypeMap"
-            :label="index"
-          >
-            <option
-              v-for="listvalue in $store.state.phenotypeModule.phenotypeMap[index]"
-              :value="listvalue"
-              >{{ listvalue }}
-            </option>
-          </optgroup>
-        </select>`,
-  data() {
-    return { selectedPhenotype: null };
-    }
-});
-
 const phenotypeModule = {
   state: {
     phenotypeMap: null
