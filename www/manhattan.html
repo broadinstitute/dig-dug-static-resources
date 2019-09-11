@@ -78,6 +78,8 @@
 <script src="/www/js/modules/datasetModule.js"></script>
 <script src="/www/js/manhattan.js"></script>
 <script src="/www/js/tableColumns.js"></script>
+<script src="/www/js/modules/getVariantDataModule.js"></script>
+
 <script>
     let app = new Vue({
         el: "#app",
@@ -109,15 +111,13 @@
         store: new Vuex.Store({
             modules: {
                 phenotypeModule,
-                datasetModule
+                datasetModule,
+                manhattan:getVariantDataModule,
+                table:getVariantDataModule
             },
 
             state: {
-                variants: [],
-                tableData: [],
 
-                // user state
-                pValueThreshold: 0.00005
             },
             mutations: {
                 setSelectedPhenotype(state, phenotype) {
@@ -126,17 +126,11 @@
                 setSelectedDataset(state, dataset) {
                     state.selectedDataset = dataset;
                 },
-                updateVariants(state, variants) {
-                    state.variants = variants;
+                setTableData(state, tableData) {
+                    state.tableData = tableData;
                 },
-                setPValueThreshold(state, pValue) {
-                    state.pValueThreshold = pValue;
-                },
-                setTableData(state, data) {
-                    state.tableData = data;
-                },
-                setGraphData(state, data) {
-                    state.graphData = data;
+                setGraphData(state, graphData) {
+                    state.graphData = graphData;
                 }
             },
             actions: {
@@ -148,103 +142,22 @@
                 },
                 onDatasetChange(context, selectedDataset) {
                     context.commit("setSelectedDataset", selectedDataset);
-                    context.dispatch('performGetData');
+                    context.dispatch('performGetTableData');
+                    context.dispatch('performGetGraphData');
                     context.commit("setTableData", []);
                     context.commit("setGraphData", []);
                 },
-                async setPValueThreshold(context, pValue) {
-                    context.commit("setPValueThreshold", pValue);
-                    context.dispatch("performGetData");
+                async performGetTableData(context) {
+                    let dataset = context.state.selectedDataset;
+                    let phenotype = context.state.selectedPhenotype;
+                    console.log(dataset + " inside performGetTableData");
+                    console.log(phenotype + " performGetTableData");
+                    context.dispatch("getData",dataset,phenotype,25);
                 },
-                async performGetData(context) {
-                    let phenotype = this.state.selectedPhenotype;
-                    let dataset = this.state.selectedDataset;
-                    let pvalue = this.state.pValueThreshold;
-
-                    // simple call
-                    let body = {
-                        passback: "abc123",
-                        entity: "variant",
-                        page_start: -1,
-                        page_size: -1,
-                        limit: 25,
-                        count: false,
-                        result_format: "verbose",
-                        properties: {
-                            cproperty: [
-                                "CHROM",
-                                "CLOSEST_GENE",
-                                "DBSNP_ID",
-                                "POS",
-                                "VAR_ID"
-                            ],
-                            dproperty: { MAF: [dataset] },
-                            pproperty: {
-                                ODDS_RATIO: { [dataset]: [phenotype] },
-                                P_VALUE: { [dataset]: [phenotype] }
-                            }
-                        },
-                        filters: [
-                            {
-                                dataset_id: dataset,
-                                phenotype: phenotype,
-                                operand: "P_VALUE",
-                                operator: "LT",
-                                value: pvalue,
-                                operand_type: "FLOAT"
-                            },
-                            {
-                                dataset_id: dataset,
-                                phenotype: phenotype,
-                                operand: "P_VALUE",
-                                operator: "GT",
-                                value: 0.0,
-                                operand_type: "FLOAT"
-                            }
-                        ]
-                    };
-
-                    // download the variants
-                    let tableJson = fetch(`/getData`, {
-                        method: "POST",
-                        body: JSON.stringify(body)
-                    })
-                        .then(resp => resp.json())
-                        .then(json =>
-                            tableColumns(
-                                json,
-                                "VAR_ID",
-                                "CHROM",
-                                "POS",
-                                "CLOSEST_GENE",
-                                "P_VALUE"
-                            )
-                        )
-                        .then(tableData => context.commit("setTableData", tableData))
-                        .catch(error => console.log(error.message));
-
-                    //change the output limit for the graph
-                    function replacer(key, value) {
-                        return key == "limit" ? (value = 500) : value;
-                    }
-
-                    let graphJson = fetch(`/getData`, {
-                        method: "POST",
-                        body: JSON.stringify(body, replacer)
-                    })
-                        .then(resp => resp.json())
-                        .then(json =>
-                            tableColumns(
-                                json,
-                                "VAR_ID",
-                                "CHROM",
-                                "POS",
-                                "CLOSEST_GENE",
-                                "P_VALUE"
-                            )
-                        )
-                        .then(tableData => context.commit("setGraphData", tableData))
-                        .catch(error => console.log(error.message));
+                async performGetGraphData(context) {
+                    let dataset = context.state.selectedDataset;
+                    let phenotype = context.state.selectedPhenotype;
+                    context.dispatch("getData", dataset,phenotype,25);
                 }
             }
         })
