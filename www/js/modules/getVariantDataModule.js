@@ -1,24 +1,24 @@
 const getVariantDataModule = {
     state() {
-        return {variants: null}
+        return {variants: null, limit:25}
     },
     mutations: {
         updateVariants(state, variants) {
             state.variants = variants;
+        },
+        setLimit(state, limit){
+            state.limit = limit;
         }
     },
     actions: {
-        async getData(context, dataset, phenotype, limit) {
-            console.log("inside getVariantDataModule " + dataset);
-            console.log("inside getVariantDataModule " + phenotype);
-
+        async getData(context, {dataset, phenotype, mutation, limit}) {
             //input JSON
             let body = {
                 passback: "abc123",
                 entity: "variant",
                 page_start: -1,
                 page_size: -1,
-                limit: limit || 25,
+                limit: limit,
                 count: false,
                 result_format: "verbose",
                 properties: {
@@ -54,7 +54,6 @@ const getVariantDataModule = {
                     }
                 ]
             };
-
             // download the variants
             let variantJson = fetch(`/getData`, {
                 method: "POST",
@@ -72,6 +71,7 @@ const getVariantDataModule = {
                 )
             )
             .then(variantData => context.commit("updateVariants", variantData))
+            .then(variantData => context.commit(mutation, variantData))
             .catch(error => console.log(error.message));
         }
     }

@@ -23,7 +23,7 @@
 
     <!-- stylesheets -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
 </head>
 
@@ -46,30 +46,31 @@
         />
     </div> -->
 
-        <manhattan-plot inline-template>
-            <div id="chart"></div>
-        </manhattan-plot>
+    <manhattan-plot inline-template v-bind:variants = "graphVariants"
+    v-bind:dataset = "$store.state.selectedDataset" v-bind:phenotype = "$store.state.selectedPhenotype">
+    <div id="chart"></div>
+</manhattan-plot>
 
-        <!-- the final list of variants -->
-        <table class="table table-striped" style="margin-top:20px">
-            <thead class="thead-dark">
-                <th>rsid</th>
-                <th>chromosomes</th>
-                <th>position</th>
-                <th>closest gene</th>
-                <th>p-value</th>
-            </thead>
-            <tbody>
-                <tr v-for="(row, index) in $store.state.tableData">
-                    <td>{{ row[0] }}</td>
-                    <td>{{ row[1] }}</td>
-                    <td>{{ row[2] }}</td>
-                    <td>{{ row[3] }}</td>
-                    <td>{{ current_pvalue(row[4]) }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+<!-- the final list of variants -->
+<table class="table table-striped" style="margin-top:20px">
+    <thead class="thead-dark">
+        <th>rsid</th>
+        <th>chromosomes</th>
+        <th>position</th>
+        <th>closest gene</th>
+        <th>p-value</th>
+    </thead>
+    <tbody>
+        <tr v-for="(row, index) in tableVariants">
+            <td>{{ row[0] }}</td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>{{ current_pvalue(row[4]) }}</td>
+        </tr>
+    </tbody>
+</table>
+</div>
 </body>
 
 <script src="/www/js/components/phenotypeSelect.js"></script>
@@ -81,87 +82,106 @@
 <script src="/www/js/modules/getVariantDataModule.js"></script>
 
 <script>
-    let app = new Vue({
-        el: "#app",
-        components: {
-            phenotypeSelect,
-            datasetSelect
+let app = new Vue({
+    el: "#app",
+    components: {
+        phenotypeSelect,
+        datasetSelect
+    },
+    // executed when the app starts
+    created() {
+        this.$store.dispatch("getPhenotypes");
+    },
+    computed: {
+        phenotypeMap() {
+            return this.$store.state.phenotypeModule.phenotypeMap;
         },
-        // executed when the app starts
-        created() {
-            this.$store.dispatch("getPhenotypes");
+        datasetList() {
+            return this.$store.state.datasetModule.datasetList;
         },
-        computed: {
-            phenotypeMap() {
-                return this.$store.state.phenotypeModule.phenotypeMap
+        tableVariants(){
+            return this.$store.state.table.variants;
+        },
+        graphVariants(){
+            return this.$store.state.manhattan.variants;
+        }
+    },
+    methods: {
+        current_pvalue(obj) {
+            let p = Object.values(obj)[0];
+            let d = Object.keys(p)[0];
+            return p[d];
+        }
+    },
+    // application state for the page
+    store: new Vuex.Store({
+        modules: {
+            phenotypeModule,
+            datasetModule,
+            manhattan:getVariantDataModule,
+            table:getVariantDataModule
+        },
+        state: {
+            tableLimit:25,
+            graphLimit:500
+        },
+        // getters: {
+        //     variantsLimit(state) { return this.$store.state.limit }
+        // },
+        mutations: {
+            setSelectedPhenotype(state, phenotype) {
+                state.selectedPhenotype = phenotype;
             },
-            datasetList() {
-                return this.$store.state.datasetModule.datasetList
+            setSelectedDataset(state, dataset) {
+                state.selectedDataset = dataset;
+            },
+            setTableData(state, tableData) {
+                state.tableData = tableData;
+            },
+            setGraphData(state, graphData) {
+                state.graphData = graphData;
             }
         },
-        methods: {
-            current_pvalue(obj) {
-                let p = Object.values(obj)[0];
-                let d = Object.keys(p)[0];
-                return p[d];
-            }
-        },
-
-        // application state for the page
-        store: new Vuex.Store({
-            modules: {
-                phenotypeModule,
-                datasetModule,
-                manhattan:getVariantDataModule,
-                table:getVariantDataModule
+        actions: {
+            onPhenotypeChange(context, selectedPhenotype) {
+                context.commit("setTableData", []);
+                context.commit("setGraphData", []);
+                context.commit("setSelectedPhenotype", selectedPhenotype);
+                context.dispatch('getDatasets', selectedPhenotype);
             },
-
-            state: {
-
+            onDatasetChange(context, selectedDataset) {
+                context.commit("setSelectedDataset", selectedDataset);
+                context.commit("setTableData", []);
+                context.commit("setGraphData", []);
+                context.dispatch("getTableData");
+                context.dispatch("getGraphData");
             },
-            mutations: {
-                setSelectedPhenotype(state, phenotype) {
-                    state.selectedPhenotype = phenotype;
-                },
-                setSelectedDataset(state, dataset) {
-                    state.selectedDataset = dataset;
-                },
-                setTableData(state, tableData) {
-                    state.tableData = tableData;
-                },
-                setGraphData(state, graphData) {
-                    state.graphData = graphData;
-                }
-            },
-            actions: {
-                onPhenotypeChange(context, selectedPhenotype) {
-                    context.commit("setSelectedPhenotype", selectedPhenotype);
-                    context.dispatch('getDatasets', selectedPhenotype);
+            async performGetData(context, {mutation, limit}){
+                if(mutation == undefined){
                     context.commit("setTableData", []);
                     context.commit("setGraphData", []);
-                },
-                onDatasetChange(context, selectedDataset) {
-                    context.commit("setSelectedDataset", selectedDataset);
-                    context.dispatch('performGetTableData');
-                    context.dispatch('performGetGraphData');
-                    context.commit("setTableData", []);
-                    context.commit("setGraphData", []);
-                },
-                async performGetTableData(context) {
-                    let dataset = context.state.selectedDataset;
-                    let phenotype = context.state.selectedPhenotype;
-                    console.log(dataset + " inside performGetTableData");
-                    console.log(phenotype + " performGetTableData");
-                    context.dispatch("getData",dataset,phenotype,25);
-                },
-                async performGetGraphData(context) {
-                    let dataset = context.state.selectedDataset;
-                    let phenotype = context.state.selectedPhenotype;
-                    context.dispatch("getData", dataset,phenotype,25);
                 }
+                else{
+                    let dataset = context.state.selectedDataset;
+                    let phenotype = context.state.selectedPhenotype;
+                    context.dispatch("getData",{dataset,phenotype,mutation, limit});
+                }
+            },
+            getTableData(context) {
+                let dataset = context.state.selectedDataset;
+                let phenotype = context.state.selectedPhenotype;
+                let limit = context.state.tableLimit;
+                context.dispatch("performGetData",{mutation:"setGraphData", limit});
+            },
+            getGraphData(context) {
+                let dataset = context.state.selectedDataset;
+                let phenotype = context.state.selectedPhenotype;
+                let limit = context.state.graphLimit;
+                context.dispatch("performGetData",{ mutation:"setTableData", limit});
             }
-        })
-    });
+        }
+    })
+});
 </script>
 
 </html>
