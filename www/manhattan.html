@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <title>Vue Test</title>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,11 +11,9 @@
     <script src="https://unpkg.com/vue"></script>
     <script src="https://unpkg.com/vuex"></script>
     <script src="https://unpkg.com/jquery"></script>
+
     <!-- Load c3.css -->
-    <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.css"
-      rel="stylesheet"
-    />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.css" rel="stylesheet" />
     <!-- Load d3.js and c3.js -->
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.8/c3.js"></script>
@@ -23,270 +22,128 @@
     <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 
     <!-- stylesheets -->
-    <link
-      rel="stylesheet"
-      href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css"
-    />
-  </head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+    integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" />
+</head>
 
-  <body>
+<body>
     <div id="app">
-      <!-- Create a phenotype selection combo box component -->
-      Phenotype:
-      <phenotype-select inline-template>
-        <select
-          v-model="phenotype"
-          @change="$store.dispatch('selectPhenotype', phenotype)"
-        >
-          <optgroup
-            v-for="(item, index) in $store.state.phenotypeMap"
-            :label="index"
-          >
-            <option
-              v-for="listvalue in $store.state.phenotypeMap[index]"
-              :value="listvalue"
-              >{{ listvalue }}
-            </option>
-          </optgroup>
-        </select>
-      </phenotype-select>
+        <!-- Create a phenotype selection combo box component -->
+        Phenotype:
+        <phenotype-select v-bind:phenotypes='phenotypeMap'> </phenotype-select>
+        <!-- Create a dataset selection combo box component -->
+        Dataset:
+        <dataset-select v-bind:datasets="datasetList"> </dataset-select>
 
-      <!-- Create a dataset selection combo box component -->
-      Dataset:
-      <dataset-select inline-template>
-        <select
-          v-model="dataset"
-          @change="$store.dispatch('selectDataset', dataset)"
-        >
-          <option v-for="item in $store.state.datasetList" :value="item">{{
-            item
-          }}</option>
-        </select>
-      </dataset-select>
-
-      <!-- getData filters -->
-      <!-- <div v-if="$store.state.dataset">
-        P-value:
-        <input
-          v-model="$store.state.pValueThreshold"
-          @change="$store.dispatch('performGetData')"
-        />
-      </div> -->
-
-      <manhattan-plot inline-template>
+        <manhattan-plot inline-template v-bind:variants = "graphVariants"
+        v-bind:dataset = "$store.state.selectedDataset" v-bind:phenotype = "$store.state.selectedPhenotype">
         <div id="chart"></div>
-      </manhattan-plot>
+    </manhattan-plot>
 
-      <!-- the final list of variants -->
-      <table class="table table-striped" style="margin-top:20px">
+    <!-- the final list of variants -->
+    <table class="table table-striped" style="margin-top:20px">
         <thead class="thead-dark">
-          <th>rsid</th>
-          <th>chromosomes</th>
-          <th>position</th>
-          <th>closest gene</th>
-          <th>p-value</th>
+            <th>rsid</th>
+            <th>chromosomes</th>
+            <th>position</th>
+            <th>closest gene</th>
+            <th>p-value</th>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in $store.state.tableData">
-            <td>{{ row[0] }}</td>
-            <td>{{ row[1] }}</td>
-            <td>{{ row[2] }}</td>
-            <td>{{ row[3] }}</td>
-            <td>{{ current_pvalue(row[4]) }}</td>
-          </tr>
+            <tr v-for="(row, index) in tableVariants">
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ current_pvalue(row[4]) }}</td>
+            </tr>
         </tbody>
-      </table>
-    </div>
-  </body>
-  <script src="/www/js/phenotypeSelect.js"></script>
-  <script src="/www/js/datasetSelect.js"></script>
-  <script src="/www/js/manhattan.js"></script>
-  <script src="/www/js/tableColumns.js"></script>
-  <script>
-    let app = new Vue({
-      el: "#app",
+    </table>
+</div>
+</body>
 
-      // executed when the app starts
-      created() {
-        this.$store.dispatch("getPhenotypes");
-      },
-      methods: {
-        current_pvalue(obj) {
-          let p = Object.values(obj)[0];
-          let d = Object.keys(p)[0];
-          return p[d];
+<script src="/www/js/utils/tableColumns.js"></script>
+<script src="/www/js/components/phenotypeSelect.js"></script>
+<script src="/www/js/components/datasetSelect.js"></script>
+<script src="/www/js/components/manhattanPlot.js"></script>
+<script src="/www/js/modules/phenotypeModule.js"></script>
+<script src="/www/js/modules/datasetModule.js"></script>
+<script src="/www/js/modules/getVariantDataModule.js"></script>
+
+<script>
+let app = new Vue({
+    el: "#app",
+    components: {
+        phenotypeSelect,
+        datasetSelect
+    },
+    // executed when the app starts
+    created() {
+        this.$store.dispatch("phenotypeModule/getPhenotypes");
+        this.$store.commit("table/setLimit",25);
+        this.$store.commit("manhattan/setLimit",500);
+    },
+    computed: {
+        phenotypeMap() {
+            return this.$store.state.phenotypeModule.phenotypeMap;
+        },
+        datasetList() {
+            return this.$store.state.datasetModule.datasetList;
+        },
+        tableVariants(){
+            return this.$store.state.table.variants;
+        },
+        graphVariants(){
+            return this.$store.state.manhattan.variants;
         }
-      },
-
-      // application state for the page
-      store: new Vuex.Store({
+    },
+    methods: {
+        current_pvalue(obj) {
+            let p = Object.values(obj)[0];
+            let d = Object.keys(p)[0];
+            return p[d];
+        }
+    },
+    // application state for the page
+    store: new Vuex.Store({
+        modules: {
+            phenotypeModule,
+            datasetModule,
+            manhattan:getVariantDataModule,
+            table:getVariantDataModule
+        },
         state: {
-          phenotypeMap: {},
-          datasetList: [],
-          variants: [],
-          tableData: [],
-
-          // user state
-          selectedPhenotype: null,
-          selectedDataset: null,
-          pValueThreshold: 0.00005
         },
         mutations: {
-          updatePhenotypeMap(state, phenotypeMap) {
-            state.phenotypeMap = phenotypeMap;
-          },
-          updateDatasetList(state, datasetList) {
-            state.datasetList = datasetList;
-          },
-          updateVariants(state, variants) {
-            state.variants = variants;
-          },
-          selectPhenotype(state, phenotype) {
-            state.selectedPhenotype = phenotype;
-          },
-          selectDataset(state, dataset) {
-            state.selectedDataset = dataset;
-          },
-          setPValueThreshold(state, pValue) {
-            state.pValueThreshold = pValue;
-          },
-          setTableData(state, data) {
-            state.tableData = data;
-          },
-          setGraphData(state, data) {
-            state.graphData = data;
-          }
+            setSelectedPhenotype(state, phenotype) {
+                state.selectedPhenotype = phenotype;
+            },
+            setSelectedDataset(state, dataset) {
+                state.selectedDataset = dataset;
+            }
         },
         actions: {
-          async getPhenotypes(context) {
-            let json = await fetch("/getPhenotypes").then(resp => resp.json());
-
-            context.commit("updatePhenotypeMap", json);
-          },
-
-          async selectPhenotype(context, phenotype) {
-            let json = await fetch(`/getDatasets/${phenotype}`).then(resp =>
-              resp.json()
-            );
-
-            // commit changes
-            context.commit("selectPhenotype", phenotype);
-            context.commit("setTableData", []);
-            context.commit("setGraphData", []);
-            context.commit("updateDatasetList", json);
-          },
-
-          async selectDataset(context, dataset) {
-            context.commit("setTableData", []);
-            context.commit("setGraphData", []);
-            context.commit("selectDataset", dataset);
-            context.dispatch("performGetData");
-          },
-
-          async setPValueThreshold(context, pValue) {
-            context.commit("setPValueThreshold", pValue);
-            context.dispatch("performGetData");
-          },
-
-          async performGetData(context) {
-            let phenotype = this.state.selectedPhenotype;
-            let dataset = this.state.selectedDataset;
-            let pvalue = this.state.pValueThreshold;
-
-            // simple call
-            let body = {
-              passback: "abc123",
-              entity: "variant",
-              page_start: -1,
-              page_size: -1,
-              limit: 25,
-              count: false,
-              result_format: "verbose",
-              properties: {
-                cproperty: [
-                  "CHROM",
-                  "CLOSEST_GENE",
-                  "DBSNP_ID",
-                  "POS",
-                  "VAR_ID"
-                ],
-                dproperty: { MAF: [dataset] },
-                pproperty: {
-                  ODDS_RATIO: { [dataset]: [phenotype] },
-                  P_VALUE: { [dataset]: [phenotype] }
-                }
-              },
-              filters: [
-                {
-                  dataset_id: dataset,
-                  phenotype: phenotype,
-                  operand: "P_VALUE",
-                  operator: "LT",
-                  value: pvalue,
-                  operand_type: "FLOAT"
-                },
-                {
-                  dataset_id: dataset,
-                  phenotype: phenotype,
-                  operand: "P_VALUE",
-                  operator: "GT",
-                  value: 0.0,
-                  operand_type: "FLOAT"
-                }
-              ]
-            };
-
-            // download the variants
-            let tableJson = fetch(`/getData`, {
-              method: "POST",
-              body: JSON.stringify(body)
-            })
-              .then(resp => resp.json())
-              .then(json =>
-                tableColumns(
-                  json,
-                  "VAR_ID",
-                  "CHROM",
-                  "POS",
-                  "CLOSEST_GENE",
-                  "P_VALUE"
-                )
-              )
-              .then(tableData => context.commit("setTableData", tableData))
-              .catch(error => console.log(error.message));
-
-            //change the output limit for the graph
-            function replacer(key, value) {
-              return key == "limit" ? (value = 500) : value;
+            onPhenotypeChange(context, selectedPhenotype) {
+                context.commit("table/clearData");
+                context.commit("manhattan/clearData");
+                context.commit("setSelectedPhenotype", selectedPhenotype);
+                context.dispatch('datasetModule/getDatasets', selectedPhenotype);
+            },
+            onDatasetChange(context, selectedDataset) {
+                context.commit("setSelectedDataset", selectedDataset);
+                context.commit("table/clearData");
+                context.commit("manhattan/clearData");
+                context.dispatch("performGetData");
+            },
+            performGetData(context){
+                let dataset = context.state.selectedDataset;
+                let phenotype = context.state.selectedPhenotype;
+                context.dispatch("table/getData",{dataset,phenotype});
+                context.dispatch("manhattan/getData",{dataset,phenotype});
             }
-
-            let graphJson = fetch(`/getData`, {
-              method: "POST",
-              body: JSON.stringify(body, replacer)
-            })
-              .then(resp => resp.json())
-              .then(json =>
-                tableColumns(
-                  json,
-                  "VAR_ID",
-                  "CHROM",
-                  "POS",
-                  "CLOSEST_GENE",
-                  "P_VALUE"
-                )
-              )
-              .then(tableData => context.commit("setGraphData", tableData))
-              .catch(error => console.log(error.message));
-          }
         }
-      })
-    });
-  </script>
+    })
+});
+</script>
 </html>
