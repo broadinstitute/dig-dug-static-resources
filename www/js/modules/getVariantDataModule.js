@@ -1,4 +1,5 @@
 const getVariantDataModule = {
+    namespaced:true,
     state() {
         return {variants: null, limit:25}
     },
@@ -8,17 +9,20 @@ const getVariantDataModule = {
         },
         setLimit(state, limit){
             state.limit = limit;
+        },
+        clearData(state){
+            state.variants = [];
         }
     },
     actions: {
-        async getData(context, {dataset, phenotype, mutation, limit}) {
+        async getData(context, {dataset, phenotype}) {
             //input JSON
             let body = {
                 passback: "abc123",
                 entity: "variant",
                 page_start: -1,
                 page_size: -1,
-                limit: limit,
+                limit: context.state.limit,
                 count: false,
                 result_format: "verbose",
                 properties: {
@@ -71,7 +75,6 @@ const getVariantDataModule = {
                 )
             )
             .then(variantData => context.commit("updateVariants", variantData))
-            .then(variantData => context.commit(mutation, variantData))
             .catch(error => console.log(error.message));
         }
     }

@@ -32,53 +32,43 @@
         <!-- Create a phenotype selection combo box component -->
         Phenotype:
         <phenotype-select v-bind:phenotypes='phenotypeMap'> </phenotype-select>
-
         <!-- Create a dataset selection combo box component -->
         Dataset:
         <dataset-select v-bind:datasets="datasetList"> </dataset-select>
 
-        <!-- getData filters -->
-        <!-- <div v-if="$store.state.dataset">
-        P-value:
-        <input
-        v-model="$store.state.pValueThreshold"
-        @change="$store.dispatch('performGetData')"
-        />
-    </div> -->
+        <manhattan-plot inline-template v-bind:variants = "graphVariants"
+        v-bind:dataset = "$store.state.selectedDataset" v-bind:phenotype = "$store.state.selectedPhenotype">
+        <div id="chart"></div>
+    </manhattan-plot>
 
-    <manhattan-plot inline-template v-bind:variants = "graphVariants"
-    v-bind:dataset = "$store.state.selectedDataset" v-bind:phenotype = "$store.state.selectedPhenotype">
-    <div id="chart"></div>
-</manhattan-plot>
-
-<!-- the final list of variants -->
-<table class="table table-striped" style="margin-top:20px">
-    <thead class="thead-dark">
-        <th>rsid</th>
-        <th>chromosomes</th>
-        <th>position</th>
-        <th>closest gene</th>
-        <th>p-value</th>
-    </thead>
-    <tbody>
-        <tr v-for="(row, index) in tableVariants">
-            <td>{{ row[0] }}</td>
-            <td>{{ row[1] }}</td>
-            <td>{{ row[2] }}</td>
-            <td>{{ row[3] }}</td>
-            <td>{{ current_pvalue(row[4]) }}</td>
-        </tr>
-    </tbody>
-</table>
+    <!-- the final list of variants -->
+    <table class="table table-striped" style="margin-top:20px">
+        <thead class="thead-dark">
+            <th>rsid</th>
+            <th>chromosomes</th>
+            <th>position</th>
+            <th>closest gene</th>
+            <th>p-value</th>
+        </thead>
+        <tbody>
+            <tr v-for="(row, index) in tableVariants">
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ current_pvalue(row[4]) }}</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 </body>
 
+<script src="/www/js/utils/tableColumns.js"></script>
 <script src="/www/js/components/phenotypeSelect.js"></script>
 <script src="/www/js/components/datasetSelect.js"></script>
+<script src="/www/js/components/manhattanPlot.js"></script>
 <script src="/www/js/modules/phenotypeModule.js"></script>
 <script src="/www/js/modules/datasetModule.js"></script>
-<script src="/www/js/manhattan.js"></script>
-<script src="/www/js/tableColumns.js"></script>
 <script src="/www/js/modules/getVariantDataModule.js"></script>
 
 <script>
@@ -90,7 +80,9 @@ let app = new Vue({
     },
     // executed when the app starts
     created() {
-        this.$store.dispatch("getPhenotypes");
+        this.$store.dispatch("phenotypeModule/getPhenotypes");
+        this.$store.commit("table/setLimit",25);
+        this.$store.commit("manhattan/setLimit",500);
     },
     computed: {
         phenotypeMap() {
@@ -122,66 +114,36 @@ let app = new Vue({
             table:getVariantDataModule
         },
         state: {
-            tableLimit:25,
-            graphLimit:500
         },
-        // getters: {
-        //     variantsLimit(state) { return this.$store.state.limit }
-        // },
         mutations: {
             setSelectedPhenotype(state, phenotype) {
                 state.selectedPhenotype = phenotype;
             },
             setSelectedDataset(state, dataset) {
                 state.selectedDataset = dataset;
-            },
-            setTableData(state, tableData) {
-                state.tableData = tableData;
-            },
-            setGraphData(state, graphData) {
-                state.graphData = graphData;
             }
         },
         actions: {
             onPhenotypeChange(context, selectedPhenotype) {
-                context.commit("setTableData", []);
-                context.commit("setGraphData", []);
+                context.commit("table/clearData");
+                context.commit("manhattan/clearData");
                 context.commit("setSelectedPhenotype", selectedPhenotype);
-                context.dispatch('getDatasets', selectedPhenotype);
+                context.dispatch('datasetModule/getDatasets', selectedPhenotype);
             },
             onDatasetChange(context, selectedDataset) {
                 context.commit("setSelectedDataset", selectedDataset);
-                context.commit("setTableData", []);
-                context.commit("setGraphData", []);
-                context.dispatch("getTableData");
-                context.dispatch("getGraphData");
+                context.commit("table/clearData");
+                context.commit("manhattan/clearData");
+                context.dispatch("performGetData");
             },
-            async performGetData(context, {mutation, limit}){
-                if(mutation == undefined){
-                    context.commit("setTableData", []);
-                    context.commit("setGraphData", []);
-                }
-                else{
-                    let dataset = context.state.selectedDataset;
-                    let phenotype = context.state.selectedPhenotype;
-                    context.dispatch("getData",{dataset,phenotype,mutation, limit});
-                }
-            },
-            getTableData(context) {
+            performGetData(context){
                 let dataset = context.state.selectedDataset;
                 let phenotype = context.state.selectedPhenotype;
-                let limit = context.state.tableLimit;
-                context.dispatch("performGetData",{mutation:"setGraphData", limit});
-            },
-            getGraphData(context) {
-                let dataset = context.state.selectedDataset;
-                let phenotype = context.state.selectedPhenotype;
-                let limit = context.state.graphLimit;
-                context.dispatch("performGetData",{ mutation:"setTableData", limit});
+                context.dispatch("table/getData",{dataset,phenotype});
+                context.dispatch("manhattan/getData",{dataset,phenotype});
             }
         }
     })
 });
 </script>
-
 </html>
