@@ -62,7 +62,7 @@ For production:
 
 At the core of Vue.js is a system that enables us to declaratively render data to the DOM using straightforward template syntax:
 
-Add an element with an id to the **html** portal of the page.
+Add an element with an **id** to the **html** part of the page.
 
 ```
 <div id="app">
@@ -82,3 +82,13 @@ var app = new Vue({
 ```
 
 And we have our first Vue app! The data and the DOM are now linked, and everything is now **reactive**.
+
+### Using Components
+
+```
+<div id="app">
+
+    <phenotype></phenotype>
+
+</div>
+```
