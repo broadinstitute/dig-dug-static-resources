@@ -56,7 +56,7 @@ moduleB {
 ```
 and then you call it like this:
 
-this.$store.dispatch('moduleA/save')
+`this.$store.dispatch('moduleA/save')`
 this.$store.dispatch('moduleB/save')
 
 In our project we currently have two modules:
