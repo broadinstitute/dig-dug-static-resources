@@ -35,6 +35,34 @@ Components are reusable Vue instances. They can accept the same options as a Vue
 Due to using a single state tree, all state of our application is contained inside one big object. However, as our application grows in scale, the store can get really bloated.
 
 To help with that, Vuex allows us to divide our store into **modules**. Each module can contain its own state, mutations, actions, getters, and even nested modules.
+Each module is namespaced for example:  The benefit of being namespaced is - So in order to enable this you have the option to define the module as namespaced, and then you can use the same method in different modules:
+
+
+moduleA {
+  actions:{
+    save(){}
+  },
+  namespaced: true
+}
+
+moduleB {
+  actions:{  
+    save(){}
+  },
+  namespaced: true
+}
+and then you call it like this:
+
+this.$store.dispatch('moduleA/save')
+this.$store.dispatch('moduleB/save')
+
+In our project we currently have two modules:
+
+1. datasetModule -  you can call this module anywhere using context.dispatch('datasetModule/getDatasets', selectedPhenotype);
+
+2. phenotypeModule - this.$store.dispatch("phenotypeModule/getPhenotypes");
+
+
 
 ## Usage
 
